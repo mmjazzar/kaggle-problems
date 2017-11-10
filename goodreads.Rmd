@@ -1,0 +1,150 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+### Impoerting libraries
+
+
+```{r}
+library(dplyr)
+
+
+```
+
+### Read tag data
+
+```{r}
+alltags <- read.csv("tags.csv" , sep=",", stringsAsFactors=FALSE)
+books_tags <- read.csv("book_tags.csv" , sep=",", stringsAsFactors=FALSE)
+
+```
+
+
+there is a huge tags in the tags.csv file. many of them unuseful so I will  remove unnecessary tags. By reading the file books_tags. then order the data with respect to tags count. At last, Pick the tags count less than specific number (i.e 50). Remove this lists from tags file.
+
+
+```{r}
+tags <- books_tags %>% filter(books_tags$count >= 1000 )
+
+
+```
+
+### Filter the tags file with books
+
+```{r}
+
+mydata <- Reduce(intersect, list(books_tags$tag_id,tags$tag_id))
+
+length(mydata) # numer of 
+
+```
+### check number of books with specified tags
+make sure tags cover all books
+
+```{r}
+
+nrow(books_tags[books_tags$tag_id %in% mydata,]) 
+x <-((books_tags[books_tags$tag_id %in% mydata,])) 
+x <- unique(x$goodreads_book_id)  
+
+length(x)
+
+```
+
+### view the top tags
+```{r}
+id <- vector(mode="numeric", length=0)
+name <- vector(mode="character", length=0)
+
+for (i in 1:length(mydata))
+{
+  for (j in 1:nrow(alltags))
+  {
+    if (mydata[i] == alltags$tag_id[j])
+      {
+         id[i]  <- mydata[i]
+         name[i] <- alltags$tag_name[j]
+         break
+      }
+  }
+}
+
+```
+
+save tags to CSV file. you can remove whatever tags you want
+
+```{r}
+
+toptags <- data.frame(id = id, name = name)
+
+write.csv(toptags,file = "toptags.csv")
+
+```
+
+You can remove any tags you do not need such as to-read, default.
+
+```{r}
+tag_name <- read.csv("toptags.csv" , sep=",", stringsAsFactors=FALSE)
+
+x2 <- books_tags[books_tags$tag_id %in% tag_name$id, ]
+x2$name <- 0
+
+
+for (i in 1:nrow(tag_name)) # iteration for each tag
+{
+  for (j in 1:nrow(x2)) # book itration for all elements
+  {
+    
+    if (tag_name$id[i] == x2$tag_id[j])
+      {
+        x2$name[j]  <- tag_name$name[i]
+      }
+  }
+}
+
+
+
+```
+
+At last, linking tags to books, I save 5 tags for each book
+```{r}
+
+books <- read.csv("books.csv" , sep=",", stringsAsFactors=FALSE)
+books$tag <- 0
+books$tag2 <- 0
+books$tag3 <- 0
+books$tag4 <- 0
+books$tag5 <- 0
+
+
+for (i in 1:nrow(x2)) # itreation for all tags in the books
+{
+  for (j in 1:nrow(books)) # itreation books
+  {
+    if (books$goodreads_book_id[j] == x3$goodreads_book_id[i])
+      {
+        if  (length(x2$goodreads_book_id[x2$goodreads_book_id == 1]) > 5)
+          {
+           books$tag[j]   <- x2$name[i] 
+           books$tag2[j]  <- x2$name[i+1] 
+           books$tag3[j]  <- x2$name[i+2] 
+           books$tag4[j]  <- x2$name[i+3] 
+           books$tag5[j]  <- x2$name[i+4] 
+          }
+        else 
+        {
+          books$tag[j]   <- x2$name[i] 
+        }
+         
+         
+      }
+  }
+}
+
+write.csv(books,file = "new2.csv")
+
+
+```
+
